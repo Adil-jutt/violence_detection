@@ -64,6 +64,9 @@ class Config:
     ema_alpha: float = 0.35        # EMA smoothing weight (higher = more responsive)
     alert_threshold: float = 0.65
     alert_consecutive: int = 3     # consecutive windows above threshold → alert
+    yolo_infer_frames: int = 5     # YOLO runs on this many keyframes (not all 32) → 6× faster
+    buffer_max_side: int = 640     # downscale frames before buffering; 0 = keep native res
+    compile_model: bool = False    # torch.compile reduce-overhead; adds ~30s warmup, ~20% faster
 
     def __post_init__(self):
         os.makedirs(self.checkpoint_dir, exist_ok=True)
