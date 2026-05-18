@@ -7,9 +7,8 @@ class Config:
     # ── Paths ──────────────────────────────────────────────────────────────
     data_root: str = "/home/adil/Downloads/voilence_detection/Real Life Violence Dataset"
     checkpoint_dir: str = "./checkpoints"
-    yolo_cache_path: str = "./yolo_roi_cache.pkl"
-    frame_cache_dir: str = "./frame_cache"   # pre-extracted frames; ~9 GB for 1996 clips
-    use_frame_cache: bool = True             # set False to skip and read videos live
+    frame_cache_dir: str = "./frame_cache_raw"  # pre-extracted raw frames; ~9 GB for 1996 clips
+    use_frame_cache: bool = True                # set False to skip and read videos live
 
     # ── Data / sampling ────────────────────────────────────────────────────
     classes: tuple = ("NonViolence", "Violence")   # 0 = NonViolence, 1 = Violence
@@ -21,8 +20,8 @@ class Config:
 
     # ── YOLO (person detection) ─────────────────────────────────────────────
     yolo_weights: str = "yolov8n.pt"
-    yolo_conf: float = 0.20        # min confidence to accept a person detection
-    yolo_iou: float = 0.45
+    yolo_conf: float = 0.25        # min confidence to accept a person detection
+    yolo_iou: float = 0.60         # IoU threshold for NMS
     yolo_padding: float = 0.15     # fractional padding added around union ROI
     yolo_device: str = "cuda"
 
@@ -50,7 +49,7 @@ class Config:
     label_smoothing: float = 0.1
     warmup_epochs: int = 3
     gradient_clip: float = 1.0
-    num_workers: int = 4
+    num_workers: int = 2
 
     # ── Augmentation ───────────────────────────────────────────────────────
     color_jitter_p: float = 0.5
@@ -63,10 +62,15 @@ class Config:
     stride_frames: int = 8         # run inference every N new frames (~0.27 s at 30 fps)
     ema_alpha: float = 0.35        # EMA smoothing weight (higher = more responsive)
     alert_threshold: float = 0.65
-    alert_consecutive: int = 3     # consecutive windows above threshold → alert
+    alert_consecutive: int = 6     # consecutive windows above threshold → alert
     yolo_infer_frames: int = 5     # YOLO runs on this many keyframes (not all 32) → 6× faster
     buffer_max_side: int = 640     # downscale frames before buffering; 0 = keep native res
     compile_model: bool = False    # torch.compile reduce-overhead; adds ~30s warmup, ~20% faster
+
+    # ── Production training ────────────────────────────────────────────────────
+    grad_accum_steps: int = 1      # effective batch = batch_size × grad_accum_steps
+    early_stop_patience: int = 10  # epochs without val F1 improvement before halting
+    val_batch_multiplier: int = 2  # val loader batch = batch_size × this (no backward pass)
 
     def __post_init__(self):
         os.makedirs(self.checkpoint_dir, exist_ok=True)

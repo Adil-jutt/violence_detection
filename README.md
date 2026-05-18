@@ -22,6 +22,8 @@ Classification head  →  Violence probability [0, 1]
 
 **Why transformer over LSTM:** motion magnitude is not discriminative in this dataset (non-violent clips actually have more optical flow than violent ones). What matters is semantic context — who is near whom, contact patterns, posture sequences. Self-attention can identify which frame pairs are informative without forcing a fixed-order hidden state.
 
+> All commands in one place: [`commands.txt`](commands.txt)
+
 ## Project Structure
 
 ```
@@ -92,8 +94,17 @@ The dataset used during development is the [Real Life Violence Situations Datase
 # Default run (reads config.py defaults)
 python train.py
 
-# Override hyperparameters on the command line
+# Override hyperparameters
 python train.py --lr 1e-4 --batch_size 8 --num_epochs 50
+
+# Gradient accumulation (effective batch = batch_size × steps)
+python train.py --grad_accum_steps 4
+
+# Resume after a crash or early stop
+python train.py --resume checkpoints/best.pth
+
+# Override early stopping patience
+python train.py --early_stop_patience 15
 ```
 
 ### Training strategy
@@ -139,17 +150,23 @@ Threshold is selected automatically via Youden's J statistic.
 # Video file
 python inference.py --source path/to/video.mp4
 
+# Webcam (index 0)
+python inference.py --source 0
+
 # RTSP stream
 python inference.py --source rtsp://camera-ip/stream
 
-# Webcam
-python inference.py --source 0
-
-# Headless output (no display window)
+# Headless — no display window, write annotated output
 python inference.py --source video.mp4 --no-display --output annotated.mp4
+
+# Show YOLO person detection boxes on overlay
+python inference.py --source video.mp4 --show-yolo
 
 # Enable torch.compile (~30s warmup, ~20% faster throughput after)
 python inference.py --source video.mp4 --compile
+
+# Custom checkpoint
+python inference.py --source video.mp4 --checkpoint checkpoints/epoch30.pth
 ```
 
 ### Production design (two-thread)

@@ -46,18 +46,19 @@ def save_checkpoint(
     metrics: dict,
     cfg,
     tag: str = "best",
+    scheduler=None,
 ):
     path = os.path.join(cfg.checkpoint_dir, f"{tag}.pth")
-    torch.save(
-        {
-            "epoch": epoch,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "metrics": metrics,
-            "cfg": vars(cfg),  # save as plain dict so weights_only=True works
-        },
-        path,
-    )
+    data = {
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "metrics": metrics,
+        "cfg": vars(cfg),  # save as plain dict so weights_only=True works
+    }
+    if scheduler is not None:
+        data["scheduler_state_dict"] = scheduler.state_dict()
+    torch.save(data, path)
 
 
 def load_checkpoint(

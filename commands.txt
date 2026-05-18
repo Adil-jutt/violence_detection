@@ -1,0 +1,76 @@
+═══════════════════════════════════════════════════════════════
+ Violence Detection — Quick Reference Commands
+═══════════════════════════════════════════════════════════════
+
+── ENVIRONMENT SETUP ──────────────────────────────────────────
+
+conda create -n violence python=3.10 -y
+conda activate violence
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install timm ultralytics opencv-python scikit-learn tqdm matplotlib
+
+── TRAINING ───────────────────────────────────────────────────
+
+# Default run (reads all hyperparameters from config.py)
+python train.py
+
+# Override learning rate and batch size
+python train.py --lr 1e-4 --batch_size 8
+
+# Override number of epochs
+python train.py --num_epochs 50
+
+# Gradient accumulation (effective batch = batch_size × steps)
+python train.py --grad_accum_steps 4
+
+# Resume from a checkpoint after a crash or early stop
+python train.py --resume checkpoints/last.pth
+python train.py --resume checkpoints/best.pth
+python train.py --resume checkpoints/epoch10.pth
+
+# Override early stopping patience
+python train.py --early_stop_patience 15
+
+# Combine overrides
+python train.py --lr 1e-4 --batch_size 8 --num_epochs 50 --grad_accum_steps 2
+
+── EVALUATION ─────────────────────────────────────────────────
+
+# Run full evaluation on validation split
+python evaluate.py --checkpoint checkpoints/best.pth
+
+# Outputs written to eval_outputs/
+#   confusion_matrix.png
+#   roc_curve.png
+#   score_dist.png
+
+── INFERENCE ──────────────────────────────────────────────────
+
+# Video file
+python inference.py --source path/to/video.mp4
+
+# Webcam (index 0)
+python inference.py --source 0
+
+# RTSP stream
+python inference.py --source rtsp://camera-ip/stream
+
+# Headless — no display window, write annotated output
+python inference.py --source video.mp4 --no-display --output annotated.mp4
+
+# Enable torch.compile (~30s warmup, ~20% faster after)
+python inference.py --source video.mp4 --compile
+
+# Show YOLO person detection boxes on overlay
+python inference.py --source video.mp4 --show-yolo
+
+# Custom checkpoint (default: checkpoints/best.pth)
+python inference.py --source video.mp4 --checkpoint checkpoints/epoch30.pth
+
+── CONDA SHORTHAND (if not activated) ────────────────────────
+
+conda run -n violence python train.py
+conda run -n violence python evaluate.py --checkpoint checkpoints/best.pth
+conda run -n violence python inference.py --source 0
+
+═══════════════════════════════════════════════════════════════

@@ -16,6 +16,7 @@
 
 # Large generated caches / outputs
 frame_cache/
+frame_cache_raw/
 yolo_roi_cache.pkl
 checkpoints/
 eval_outputs/
