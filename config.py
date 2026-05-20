@@ -57,12 +57,16 @@ class Config:
     temporal_jitter: bool = True   # randomly sub-sample within the sampled window
 
     # ── Inference / streaming ──────────────────────────────────────────────
-    buffer_seconds: float = 5.0    # ring buffer length in seconds
+    # Training sampled 32 frames from the full clip (2–20 s). The ring buffer
+    # must span a comparable duration so the model sees a similar temporal range.
+    # 10 s at 30 fps = 300 frames; use ~10 s to sit in the middle of the
+    # training distribution. RAM cost: ~300 × 640×360×3 ≈ 200 MB (uint8).
+    buffer_seconds: float = 10.0   # ring buffer length in seconds
     fps_assumed: int = 30          # assumed stream FPS for buffer sizing
     stride_frames: int = 8         # run inference every N new frames (~0.27 s at 30 fps)
-    ema_alpha: float = 0.35        # EMA smoothing weight (higher = more responsive)
+    ema_alpha: float = 0.45        # EMA smoothing weight — slightly more responsive than 0.35
     alert_threshold: float = 0.65
-    alert_consecutive: int = 6     # consecutive windows above threshold → alert
+    alert_consecutive: int = 3     # consecutive windows above threshold → alert (was 6)
     yolo_infer_frames: int = 5     # YOLO runs on this many keyframes (not all 32) → 6× faster
     buffer_max_side: int = 640     # downscale frames before buffering; 0 = keep native res
     compile_model: bool = False    # torch.compile reduce-overhead; adds ~30s warmup, ~20% faster

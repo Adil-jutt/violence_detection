@@ -67,6 +67,35 @@ python inference.py --source video.mp4 --show-yolo
 # Custom checkpoint (default: checkpoints/best.pth)
 python inference.py --source video.mp4 --checkpoint checkpoints/epoch30.pth
 
+── gRPC SERVICE ───────────────────────────────────────────────
+
+# 0. Install gRPC deps (once)
+pip install grpcio grpcio-tools
+
+# 1. Generate protobuf files (once, or after editing violence.proto)
+cd grpc_service && bash generate_proto.sh && cd ..
+
+# 2. Start the server (loads model + YOLO, stays running)
+python grpc_service/server.py --checkpoint checkpoints/best.pth
+python grpc_service/server.py --checkpoint checkpoints/best.pth --compile
+
+# 3. Run the runner (connects to server, same display as inference.py)
+python grpc_service/runner.py --source path/to/video.mp4
+python grpc_service/runner.py --source 0                          # webcam
+python grpc_service/runner.py --source rtsp://camera-ip/stream
+
+# Show YOLO boxes + union ROI overlay
+python grpc_service/runner.py --source video.mp4 --show-yolo
+
+# Headless + save annotated video
+python grpc_service/runner.py --source video.mp4 --no-display --output out.mp4
+
+# Save the probability-over-time plot to a file instead of showing interactively
+python grpc_service/runner.py --source video.mp4 --plot-out scores.png
+
+# Custom server address
+python grpc_service/runner.py --source video.mp4 --server 192.168.1.10:50051
+
 ── CONDA SHORTHAND (if not activated) ────────────────────────
 
 conda run -n violence python train.py

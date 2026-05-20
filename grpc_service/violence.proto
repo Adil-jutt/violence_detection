@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package violence;
+
+service ViolenceDetector {
+  // Bidirectional stream: client sends frames, server returns a result per frame.
+  rpc DetectStream(stream FrameRequest) returns (stream DetectResponse);
+}
+
+message FrameRequest {
+  bytes frame     = 1;  // raw BGR bytes (height × width × 3), or JPEG if width/height == 0
+  int64 frame_idx = 2;
+  int32 width     = 3;  // frame width  (0 → legacy JPEG path)
+  int32 height    = 4;  // frame height (0 → legacy JPEG path)
+}
+
+message DetectResponse {
+  int64  frame_idx   = 1;
+  float  probability = 2;  // EMA-smoothed violence probability
+  bool   alert       = 3;  // true when consecutive windows exceed threshold
+  string label       = 4;  // NORMAL / SUSPICIOUS / VIOLENCE DETECTED
+
+  // YOLO overlay — boxes in small-buffer coordinate space (same as inference.py)
+  repeated float boxes_flat = 5;  // N*4 floats: x1,y1,x2,y2 per detected person
+  repeated float confs      = 6;  // N confidence scores
+  float  roi_x1  = 7;
+  float  roi_y1  = 8;
+  float  roi_x2  = 9;
+  float  roi_y2  = 10;
+  int32  small_w = 11;  // width of the buffer frame (for client-side scaling)
+  int32  small_h = 12;
+  bool   has_roi = 13;
+}
